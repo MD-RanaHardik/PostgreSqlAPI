@@ -11,17 +11,7 @@ use serde::Serialize;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // let (client, connection) =
-    //     tokio_postgres::connect("postgresql://postgres:root@localhost/Employee", NoTls)
-    //         .await
-    //         .expect("Faild to connect with postgres server");
-
-    // tokio::spawn(async move {
-    //     if let Err(e) = connection.await {
-    //         eprintln!("connection error: {}", e);
-    //     }
-    // });
-
+    
     HttpServer::new(|| {
         App::new()
             .service(views::index)

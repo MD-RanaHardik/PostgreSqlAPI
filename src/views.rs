@@ -175,7 +175,6 @@ pub async fn update_employee_data(
     data: web::Form<EmployeeDataUpdate>,
 ) -> impl Responder {
     if cradential.user_id() == "Hardik" && cradential.password().unwrap() == "Hardik@123" {
-        
         let (client, connection) =
             tokio_postgres::connect("postgresql://postgres:root@localhost/Employee", NoTls)
                 .await
@@ -187,24 +186,18 @@ pub async fn update_employee_data(
             }
         });
 
-
         let res = client.execute("update Employees set Employee_name =$1 , Employee_salary =$2 ,Employee_designation = $3 where Username =$4", &[&data.Employee_name,&data.Employee_salary,&data.Employee_designation,&username.to_string()]).await;
 
         match res {
-            Ok(r)=>{
-                if r !=0{
+            Ok(r) => {
+                if r != 0 {
                     HttpResponse::Ok().body("Record updated")
-                }else{
+                } else {
                     HttpResponse::Ok().body("No record found")
                 }
-                
-            },
-            Err(e)=>{
-                HttpResponse::InternalServerError().body("Faild to update data")
             }
+            Err(e) => HttpResponse::InternalServerError().body("Faild to update data"),
         }
-        
-        
     } else {
         HttpResponse::InternalServerError().body("Faild to authenticate request")
     }
@@ -216,7 +209,6 @@ pub async fn delete_employee_data(
     cradential: BasicAuth,
 ) -> impl Responder {
     if cradential.user_id() == "Hardik" && cradential.password().unwrap() == "Hardik@123" {
-        
         let (client, connection) =
             tokio_postgres::connect("postgresql://postgres:root@localhost/Employee", NoTls)
                 .await
@@ -228,26 +220,24 @@ pub async fn delete_employee_data(
             }
         });
 
-
-        let res = client.execute("delete from Employees where Username = $1", &[&username.to_string()]).await;
+        let res = client
+            .execute(
+                "delete from Employees where Username = $1",
+                &[&username.to_string()],
+            )
+            .await;
 
         match res {
-            Ok(r)=>{
-                if r !=0{
+            Ok(r) => {
+                if r != 0 {
                     HttpResponse::Ok().body("Employee deleted")
-                }else{
+                } else {
                     HttpResponse::Ok().body("No record found")
                 }
-                
-            },
-            Err(e)=>{
-                HttpResponse::InternalServerError().body("Faild to delete data")
             }
+            Err(e) => HttpResponse::InternalServerError().body("Faild to delete data"),
         }
-        
-        
     } else {
         HttpResponse::InternalServerError().body("Faild to authenticate request")
     }
 }
-
