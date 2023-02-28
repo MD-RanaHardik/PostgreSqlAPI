@@ -1,12 +1,11 @@
 use actix_web::{
     get,
-    web::{self, Form, Json},
+    web::{self, Form},
     HttpResponse, Responder,
 };
 use actix_web_httpauth::extractors::basic::BasicAuth;
-use postgres::{Client, NoTls};
+use deadpool_postgres::Pool;
 use serde::{Deserialize, Serialize};
-use tokio_postgres::GenericClient;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EmployeeDataInsert {
@@ -43,18 +42,10 @@ pub async fn index() -> HttpResponse {
 pub async fn add_new_employee(
     data: Form<EmployeeDataInsert>,
     cradential: BasicAuth,
+    pool: web::Data<Pool>,
 ) -> impl Responder {
     if cradential.user_id() == "Hardik" && cradential.password().unwrap() == "Hardik@123" {
-        let (client, connection) =
-            tokio_postgres::connect("postgresql://postgres:root@localhost/Employee", NoTls)
-                .await
-                .expect("Faild to connect with postgres server");
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
-            }
-        });
+        let client = pool.get().await.unwrap();
 
         let res = client.execute("insert into Employees (Employee_name,Employee_salary,Employee_designation,Username,Password) values($1,$2,$3,$4,$5)", &[&data.Employee_name,&data.Employee_salary,&data.Employee_designation,&data.Username,&data.Password]).await;
 
@@ -74,19 +65,9 @@ pub async fn add_new_employee(
 }
 
 #[get("/users")]
-pub async fn get_all_employeedata(cradential: BasicAuth) -> impl Responder {
+pub async fn get_all_employeedata(cradential: BasicAuth, pool: web::Data<Pool>) -> impl Responder {
     if cradential.user_id() == "Hardik" && cradential.password().unwrap() == "Hardik@123" {
-        let (client, connection) =
-            tokio_postgres::connect("postgresql://postgres:root@localhost/Employee", NoTls)
-                .await
-                .expect("Faild to connect with server");
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
-            }
-        });
-
+        let client = pool.get().await.unwrap();
         let mut allemployees: Vec<EmployeeData> = vec![];
 
         let res = client.query("select * from Employees", &[]).await;
@@ -121,18 +102,10 @@ pub async fn get_all_employeedata(cradential: BasicAuth) -> impl Responder {
 pub async fn get_perticuler_user(
     username: web::Path<String>,
     cradential: BasicAuth,
+    pool: web::Data<Pool>,
 ) -> impl Responder {
     if cradential.user_id() == "Hardik" && cradential.password().unwrap() == "Hardik@123" {
-        let (client, connection) =
-            tokio_postgres::connect("postgresql://postgres:root@localhost/Employee", NoTls)
-                .await
-                .expect("Faild to connect with server");
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
-            }
-        });
+        let client = pool.get().await.unwrap();
 
         let mut allemployees: Vec<EmployeeData> = vec![];
         let res = client
@@ -173,18 +146,10 @@ pub async fn update_employee_data(
     username: web::Path<String>,
     cradential: BasicAuth,
     data: web::Form<EmployeeDataUpdate>,
+    pool: web::Data<Pool>,
 ) -> impl Responder {
     if cradential.user_id() == "Hardik" && cradential.password().unwrap() == "Hardik@123" {
-        let (client, connection) =
-            tokio_postgres::connect("postgresql://postgres:root@localhost/Employee", NoTls)
-                .await
-                .expect("Faild to connect with server");
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
-            }
-        });
+        let client = pool.get().await.unwrap();
 
         let res = client.execute("update Employees set Employee_name =$1 , Employee_salary =$2 ,Employee_designation = $3 where Username =$4", &[&data.Employee_name,&data.Employee_salary,&data.Employee_designation,&username.to_string()]).await;
 
@@ -207,18 +172,10 @@ pub async fn update_employee_data(
 pub async fn delete_employee_data(
     username: web::Path<String>,
     cradential: BasicAuth,
+    pool: web::Data<Pool>,
 ) -> impl Responder {
     if cradential.user_id() == "Hardik" && cradential.password().unwrap() == "Hardik@123" {
-        let (client, connection) =
-            tokio_postgres::connect("postgresql://postgres:root@localhost/Employee", NoTls)
-                .await
-                .expect("Faild to connect with server");
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
-            }
-        });
+        let client = pool.get().await.unwrap();
 
         let res = client
             .execute(
